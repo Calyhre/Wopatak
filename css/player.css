@@ -1,0 +1,57 @@
+@font-face
+{
+	font-family: digit;
+	src: url('../fonts/Individigital_Demibold.ttf');
+}
+.applicationHeader{
+	/*background-image:url('images/applicationHeaderBackground.gif');
+	background-repeat: repeat-x;*/
+	width:771px;
+	height:35px;
+}
+.applicationWindow{
+	width:771px;
+	height:465px;
+	/*background: url('images/battleAreaBackground.png') no-repeat;*/
+	/*float:left;*/
+}
+.applicationContainer{
+	
+}
+.windowTitle{
+	position:absolute;
+	top:15px;
+	left:30px;
+	font-family:digit;
+	font-size:48px;
+	color:#6be8e0;
+}
+.trace{
+	width:100%;
+	color:#6be8e0;
+	font-size:10px;
+	line-height: 12px;
+}
+.playerName {
+	width:771px;
+	font-family:digit;
+	font-size:18px;
+	color:#6be8e0;
+	/*text-align: center;*/
+	margin: 0px;
+}
+.playerTwoScore {
+	font-family:digit;
+	font-size:24px;
+	color:#02d107;
+}
+.playerOneScore {
+	font-family:digit;
+	font-size:24px;
+	color:#ff00de;
+}
+.score {
+	font-family:"Arial";
+	font-size:10px;
+	color:#333333;
+}

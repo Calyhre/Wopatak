@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Expantion Origin - local</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="">
+		<meta name="author" content="David Mouton">
+		<link href="css/style.css" rel="stylesheet" media="screen">
+		<LINK href="css/player.css" rel="stylesheet" type="text/css">
+	</head>
+	<body>
+		<div class="applicationWindow">
+        <div class="applicationContainer">
+            <div class="applicationHeader">
+                <div id="playerOneName" class="playerName" style="position: relative; float: left; left: 0px;">Unknown</div>
+                <div id="playerTwoName" class="playerName" style="position:absolute; text-align:right;">Unknown</div>
+                <div style="text-align: center; left: 0px; right: 0px; position: absolute; width:771px">
+                    <span class="score">score</span>
+                    <span id="playerOneScore" class="playerOneScore">0</span>
+                    <button id="fightButton" class="fightButton">FIGHT</button>
+                    <span id="playerTwoScore" class="playerTwoScore">0</span>
+                    <span class="score">score</span>
+                </div>
+            </div>
+            <canvas id="applicationCanvas" style="width:771; height:435"/>
+        </div>
+	</div>
+
+    <strong>DEBUG</strong><div id="haxe:trace" class="trace" />
+		<script src="js/jquery-1.9.0.min.js"></script>
+		<script src="js/bean.js"></script>
+		<script src="js/easeljs-0.5.0.min.js"></script>
+		<script src="js/tweenjs-0.3.0.min.js"></script>
+		<script src="js/preloadjs-0.2.0.min.js"></script>
+		<script src="js/PlanetWarsHaxeJS.js"></script>
+		<script>
+		function init(){
+			PlanetWars.init("Wopatak","wopatak.js","ia2","ia2.js");
+		};
+		window.onload = init;
+		</script>
+	</body>
+</html>
