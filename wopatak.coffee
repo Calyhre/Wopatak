@@ -1,11 +1,10 @@
 name = "Wopatak"
 color = 0
 
-# utilisé par le systeme et affiché dans la trace à chaque tour du combat
-debugMessage=""
+debugMessage=''
 
-# Id de l'IA
 id = 0
+enemyId = -1
 
 # @internal method
 @onmessage = (event) ->
@@ -162,8 +161,11 @@ class PlanetSize
 # @return result:Array<Order>
 getOrders = (context) ->
   result = []
-  myPlanets = GameUtil.getPlayerPlanets( id, context )
-  otherPlanets = GameUtil.getEnnemyPlanets(id, context)
+  myPlanets = GameUtil.getPlayerPlanets id, context
+  otherPlanets = GameUtil.getEnnemyPlanets id, context
+  enemyId = getOtherPlayerId(id, context) if enemyId < 0
+  enemyPlanets = getOtherPlayerPlanets enemyId, context
+
   if otherPlanets != null && otherPlanets.length > 0
     for myPlanet in myPlanets
       if myPlanet.population >=40
@@ -171,6 +173,9 @@ getOrders = (context) ->
 
   return result;
 
+getOtherPlayerId = (id, context) ->
+  planets = GameUtil.getEnnemyPlanets id, context
+  planets[0].owner.id
 
 getNearestPlanet = ( source, candidats ) ->
   result = candidats[ 0 ]
@@ -181,3 +186,9 @@ getNearestPlanet = ( source, candidats ) ->
       currentDist = dist
       result = element
   return result
+
+getOtherPlayerPlanets = (id, context) ->
+  planets = []
+  for planet in context.content
+    planets.push planet if planet.owner.id == id
+  planets
