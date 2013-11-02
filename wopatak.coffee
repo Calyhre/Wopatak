@@ -1,7 +1,7 @@
 name = "Wopatak"
 color = 0
 
-debugMessage=''
+debugMessage = ''
 
 id = 0
 enemyId = -1
@@ -155,6 +155,18 @@ class PlanetSize
   @BIG : 3
   @HUGE : 4
 
+shuffle = (o) -> #v1.0
+  j = undefined
+  x = undefined
+  i = o.length
+
+  while i
+    j = Math.floor(Math.random() * i)
+    x = o[--i]
+    o[i] = o[j]
+    o[j] = x
+  o
+
 # Invoquée tous les tours pour recuperer la liste des ordres à exécuter.
 # C'est la methode à modifier pour cabler son IA.
 # @param context:Galaxy
@@ -166,8 +178,16 @@ getOrders = (context) ->
   enemyId = getOtherPlayerId(id, context) if enemyId < 0
   enemyPlanets = getOtherPlayerPlanets enemyId, context
 
-  if enemyPlanets != null && enemyPlanets.length > 0
+  if enemyPlanets != null && enemyPlanets.length > 0 && otherPlanets != null && otherPlanets.length > 0
     for myPlanet in myPlanets
+      otherPipo = shuffle(otherPlanets).slice 0, 5
+      enemyPipo = shuffle(enemyPlanets).slice 0, 5
+      pipoPlanets = [otherPipo, enemyPipo]
+      pipoPlanets = [].concat.apply [], pipoPlanets
+
+      for pipo in pipoPlanets
+        result.push new Order myPlanet.id, pipo.id, 0
+
       currentPopulation = myPlanet.population
       if currentPopulation >= 5
         result.push new Order( myPlanet.id, getNearestPlanet(myPlanet, enemyPlanets).id, currentPopulation - 5 ) if currentPopulation - 5 != 0
