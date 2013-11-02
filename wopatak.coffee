@@ -166,10 +166,10 @@ getOrders = (context) ->
   enemyId = getOtherPlayerId(id, context) if enemyId < 0
   enemyPlanets = getOtherPlayerPlanets enemyId, context
 
-  if otherPlanets != null && otherPlanets.length > 0
+  if enemyPlanets != null && enemyPlanets.length > 0
     for myPlanet in myPlanets
-      if myPlanet.population >=40
-        result.push new Order( myPlanet.id, getNearestPlanet(myPlanet,otherPlanets).id, myPlanet.population )
+      if myPlanet.population >= 10
+        result.push new Order( myPlanet.id, getNearestPlanet(myPlanet, enemyPlanets).id, myPlanet.population - 10 ) if myPlanet.population - 10 != 0
 
   return result;
 

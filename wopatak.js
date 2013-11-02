@@ -284,12 +284,13 @@
       enemyId = getOtherPlayerId(id, context);
     }
     enemyPlanets = getOtherPlayerPlanets(enemyId, context);
-    debugMessage = enemyPlanets;
-    if (otherPlanets !== null && otherPlanets.length > 0) {
+    if (enemyPlanets !== null && enemyPlanets.length > 0) {
       for (_i = 0, _len = myPlanets.length; _i < _len; _i++) {
         myPlanet = myPlanets[_i];
-        if (myPlanet.population >= 40) {
-          result.push(new Order(myPlanet.id, getNearestPlanet(myPlanet, otherPlanets).id, myPlanet.population));
+        if (myPlanet.population >= 10) {
+          if (myPlanet.population - 10 !== 0) {
+            result.push(new Order(myPlanet.id, getNearestPlanet(myPlanet, enemyPlanets).id, myPlanet.population - 10));
+          }
         }
       }
     }
