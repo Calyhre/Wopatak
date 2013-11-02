@@ -1,39 +1,13 @@
-###
- PlanetWars Javascript SDK v0.1
- http://www.tamina-online.com/expantion-origin/
-
-
- Copyright 2013 Tamina
- Released under the MIT license
- http://opensource.org/licenses/MIT
-
- author : david mouton
-###
-
-
-###
- nom de l'IA
-###
-name = "basic IA CS"
-
-###
-  couleur d'affichage
-###
+name = "Wopatak"
 color = 0
 
-### message de debugage
-   utilisé par le systeme et affiché dans la trace à chaque tour du combat
-###
+# utilisé par le systeme et affiché dans la trace à chaque tour du combat
 debugMessage=""
 
-###
-Id de l'IA
-###
+# Id de l'IA
 id = 0
 
-###
-  @internal method
-###
+# @internal method
 @onmessage = (event) ->
   if event.data?
     turnMessage = event.data
@@ -42,12 +16,10 @@ id = 0
   else postMessage("data null")
 
 
-###
-  Invoquée tous les tours pour recuperer la liste des ordres à exécuter.
-  C'est la methode à modifier pour cabler son IA.
-  @param context:Galaxy
-  @return result:Array<Order>
-###
+# Invoquée tous les tours pour recuperer la liste des ordres à exécuter.
+# C'est la methode à modifier pour cabler son IA.
+# @param context:Galaxy
+# @return result:Array<Order>
 getOrders = (context) ->
   result = []
   myPlanets = GameUtil.getPlayerPlanets( id, context )
@@ -111,7 +83,6 @@ class Planet
 # @param source:Planet origine
 # @param target:Planet cible
 # @param creationTurn:Number numero du tour de creation du vaisseau
-###
 class Ship
   constructor: (@crew,@source,@target,@creationTurn) ->
     ### proprietaire du vaisseau###
@@ -123,38 +94,28 @@ class Ship
 class TurnMessage
   constructor: (@playerId,@galaxy) ->
 
-###
 # @internal model
-###
 class TurnResult
   constructor: (@orders,@consoleMessage = "") ->
     @error = ""
 
-###
-  @model Point
-  @param x:Number
-  @param y:Number
-###
+# @model Point
+# @param x:Number
+# @param y:Number
 class Point
   constructor: (@x,@y) ->
 
-###
-  Classe utilitaire
-###
+# Classe utilitaire
 class GameUtil
-  ###
-    @param p1:Point
-    @param p2:Point
-    @return result:Number la distance entre deux points
-  ###
+  # @param p1:Point
+  # @param p2:Point
+  # @return result:Number la distance entre deux points
   @getDistanceBetween : (p1,p2) ->
     Math.sqrt(Math.pow(p2.x - p1.x,2) + Math.pow(p2.y - p1.y,2))
 
-  ###
-    @param planetOwnerId:Number
-    @param context:Galaxy
-    @return result:Array<Planet> la liste des planetes appartenants à un joueur en particulier
-  ###
+  # @param planetOwnerId:Number
+  # @param context:Galaxy
+  # @return result:Array<Planet> la liste des planetes appartenants à un joueur en particulier
   @getPlayerPlanets: (planetOwnerId,context) ->
     result = []
     for p in context.content
@@ -162,10 +123,9 @@ class GameUtil
         result.push p
     return result
   ###
-   @param planetOwnerId:Number
-   @param context:Galaxy
-   @return result:Array<Planet> la liste des planetes ennemies et neutres
-  ###
+  # @param planetOwnerId:Number
+  # @param context:Galaxy
+  # @return result:Array<Planet> la liste des planetes ennemies et neutres
   @getEnnemyPlanets : (planetOwnerId,context) ->
     result = []
     for p in context.content
@@ -173,20 +133,15 @@ class GameUtil
         result.push p
     return result
 
-###
-  Classe utilitaire
-  @internal
-###
+# Classe utilitaire
+# @internal
 class UID
   @lastUID : 0
   @get : () ->
     UID.lastUID++
     return UID.lastUID
 
-
-###
-  Constantes
-###
+# Constantes
 class Game
   @DEFAULT_PLAYER_POPULATION : 100;
   @NUM_PLANET : new Range(5,10);
