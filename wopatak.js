@@ -276,7 +276,7 @@
   })();
 
   getOrders = function(context) {
-    var enemyPlanets, myPlanet, myPlanets, otherPlanets, result, _i, _len;
+    var currentPopulation, enemyPlanets, myPlanet, myPlanets, otherPlanets, result, _i, _len;
     result = [];
     myPlanets = GameUtil.getPlayerPlanets(id, context);
     otherPlanets = GameUtil.getEnnemyPlanets(id, context);
@@ -287,10 +287,12 @@
     if (enemyPlanets !== null && enemyPlanets.length > 0) {
       for (_i = 0, _len = myPlanets.length; _i < _len; _i++) {
         myPlanet = myPlanets[_i];
-        if (myPlanet.population >= 10) {
-          if (myPlanet.population - 10 !== 0) {
-            result.push(new Order(myPlanet.id, getNearestPlanet(myPlanet, enemyPlanets).id, myPlanet.population - 10));
+        currentPopulation = myPlanet.population;
+        if (currentPopulation >= 10) {
+          if (currentPopulation - 10 !== 0) {
+            result.push(new Order(myPlanet.id, getNearestPlanet(myPlanet, enemyPlanets).id, currentPopulation - 10));
           }
+          currentPopulation -= 10;
         }
       }
     }
