@@ -288,11 +288,11 @@
       for (_i = 0, _len = myPlanets.length; _i < _len; _i++) {
         myPlanet = myPlanets[_i];
         currentPopulation = myPlanet.population;
-        if (currentPopulation >= 10) {
-          if (currentPopulation - 10 !== 0) {
-            result.push(new Order(myPlanet.id, getNearestPlanet(myPlanet, enemyPlanets).id, currentPopulation - 10));
+        if (currentPopulation >= 5) {
+          if (currentPopulation - 5 !== 0) {
+            result.push(new Order(myPlanet.id, getNearestPlanet(myPlanet, enemyPlanets).id, currentPopulation - 5));
           }
-          currentPopulation -= 10;
+          currentPopulation -= 5;
         }
       }
     }
