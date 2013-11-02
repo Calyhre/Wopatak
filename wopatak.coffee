@@ -122,7 +122,6 @@ class GameUtil
       if p.owner.id == planetOwnerId
         result.push p
     return result
-  ###
   # @param planetOwnerId:Number
   # @param context:Galaxy
   # @return result:Array<Planet> la liste des planetes ennemies et neutres
