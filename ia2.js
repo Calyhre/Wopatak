@@ -35,15 +35,29 @@ WorkerIA.prototype = {
 		return result;
 	}
 }
-var MyIA = function(name,color) {
+var KurganIA = function(name,color) {
 	WorkerIA.call(this,name,color);
 };
-MyIA.__name__ = true;
-MyIA.main = function() {
-	WorkerIA.instance = new MyIA();
+KurganIA.__name__ = true;
+KurganIA.main = function() {
+	var IA = new KurganIA();
+	IA.init();
+	WorkerIA.instance = IA;
 }
-MyIA.__super__ = WorkerIA;
-MyIA.prototype = $extend(WorkerIA.prototype,{
+KurganIA.ArrayIndexOf = function(a,item) {
+	var result = -1;
+	var _g1 = 0, _g = a.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		if(a[i] == item) {
+			result = i;
+			break;
+		}
+	}
+	return result;
+}
+KurganIA.__super__ = WorkerIA;
+KurganIA.prototype = $extend(WorkerIA.prototype,{
 	getNearestEnnemyPlanet: function(source,candidats) {
 		var result = candidats[0];
 		var currentDist = com.tamina.planetwars.utils.GameUtil.getDistanceBetween(new com.tamina.planetwars.geom.Point(source.x,source.y),new com.tamina.planetwars.geom.Point(result.x,result.y));
@@ -58,20 +72,133 @@ MyIA.prototype = $extend(WorkerIA.prototype,{
 		}
 		return result;
 	}
+	,getEngagedForceByPlanet: function(target,dataProvider) {
+		var result = 0;
+		var _g1 = 0, _g = dataProvider.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			if(dataProvider[i].sourceID == target.id) result += dataProvider[i].numUnits;
+		}
+		return result;
+	}
+	,isPlanetCanAttack: function(target) {
+		var result = false;
+		if(target.population < com.tamina.planetwars.data.PlanetPopulation.getMaxPopulation(target.size) && target.population - this.getEngagedForceByPlanet(target,this._orders) > 30) result = true;
+		return result;
+	}
+	,isAttackable: function(source,target) {
+		var result = -1;
+		var numTurn = Math.ceil(com.tamina.planetwars.utils.GameUtil.getDistanceBetween(new com.tamina.planetwars.geom.Point(source.x,source.y),new com.tamina.planetwars.geom.Point(target.x,target.y)) / 60);
+		var targetPopulation = target.population + numTurn * 5;
+		this.debugMessage += " -- from " + source.id + " to " + target.id + " numTurn " + numTurn + " currentpop : " + target.population + " targetpop : " + targetPopulation;
+		if(targetPopulation > com.tamina.planetwars.data.PlanetPopulation.getMaxPopulation(target.size)) targetPopulation = com.tamina.planetwars.data.PlanetPopulation.getMaxPopulation(target.size);
+		if(source.population - this.getEngagedForceByPlanet(source,this._orders) > targetPopulation) result = targetPopulation + 1;
+		return result;
+	}
+	,isAlreadyAttacked: function(target,orderList) {
+		var result = false;
+		var _g1 = 0, _g = this._context.fleet.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			if(this._context.fleet[i].owner.id == this.id && this._context.fleet[i].target.id == target.id) result = true;
+		}
+		var _g1 = 0, _g = orderList.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			if(orderList[i].targetID == target.id) result = true;
+		}
+		return result;
+	}
+	,getNearestAttackablePlanet: function(source,candidats) {
+		var result = null;
+		var currentDist = 10000.0;
+		var _g1 = 0, _g = candidats.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var element = candidats[i];
+			if(currentDist > com.tamina.planetwars.utils.GameUtil.getDistanceBetween(new com.tamina.planetwars.geom.Point(source.x,source.y),new com.tamina.planetwars.geom.Point(element.x,element.y))) {
+				if(this.isAttackable(source,element) > 0 && !this.isAlreadyAttacked(element,this._orders)) {
+					currentDist = com.tamina.planetwars.utils.GameUtil.getDistanceBetween(new com.tamina.planetwars.geom.Point(source.x,source.y),new com.tamina.planetwars.geom.Point(element.x,element.y));
+					result = element;
+				}
+			}
+		}
+		return result;
+	}
+	,getNearestGrowingPlanet: function(source,candidats) {
+		var result = candidats[0];
+		var currentNumTurn = 100000;
+		var _g1 = 0, _g = candidats.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var element = candidats[i];
+			var numTurn = Math.ceil(com.tamina.planetwars.utils.GameUtil.getDistanceBetween(new com.tamina.planetwars.geom.Point(source.x,source.y),new com.tamina.planetwars.geom.Point(element.x,element.y)) / 60);
+			if(currentNumTurn > numTurn && source.id != element.id) {
+				var pop = element.population + numTurn * 5 + 20;
+				if(pop < com.tamina.planetwars.data.PlanetPopulation.getMaxPopulation(element.size)) {
+					currentNumTurn = numTurn;
+					result = element;
+				}
+			}
+		}
+		return result;
+	}
+	,counterStrike: function() {
+		var ennemyFleet = com.tamina.planetwars.utils.GameUtil.getEnnemyFleet(this.id,this._context);
+		var myPlanets = com.tamina.planetwars.utils.GameUtil.getPlayerPlanets(this.id,this._context);
+		var _g1 = 0, _g = ennemyFleet.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var s = ennemyFleet[i];
+			if(KurganIA.ArrayIndexOf(this._counteredShipList,s) < 0) {
+				if(s.target.owner.id != s.owner.id && s.owner.id != this.id) {
+					var invasionNumTurn = s.travelDuration - (this._currentTurn - s.creationTurn);
+					if(invasionNumTurn <= 0) this._counteredShipList.push(s); else {
+						var _g3 = 0, _g2 = myPlanets.length;
+						while(_g3 < _g2) {
+							var j = _g3++;
+							var myPlanet = myPlanets[j];
+							var interceptionNumTurn = com.tamina.planetwars.utils.GameUtil.getTravelNumTurn(myPlanet,s.target);
+							if(myPlanet != s.target) {
+								if(interceptionNumTurn == invasionNumTurn + 1 && myPlanet.population - this.getEngagedForceByPlanet(myPlanet,this._orders) > s.crew + 5) {
+									this._orders.push(new com.tamina.planetwars.data.Order(myPlanet.id,s.target.id,s.crew + 5 + 1));
+									this._counteredShipList.push(s);
+									break;
+								}
+							}
+						}
+					}
+				} else this._counteredShipList.push(s);
+			}
+		}
+	}
+	,init: function() {
+		this._counteredShipList = new Array();
+		this._currentTurn = 0;
+	}
 	,getOrders: function(context) {
-		var result = new Array();
+		this._context = context;
+		this.debugMessage = " --> p " + context.content[0].population;
+		this._orders = new Array();
 		var myPlanets = com.tamina.planetwars.utils.GameUtil.getPlayerPlanets(this.id,context);
 		var otherPlanets = com.tamina.planetwars.utils.GameUtil.getEnnemyPlanets(this.id,context);
+		this.counterStrike();
 		if(otherPlanets != null && otherPlanets.length > 0) {
 			var _g1 = 0, _g = myPlanets.length;
 			while(_g1 < _g) {
 				var i = _g1++;
 				var myPlanet = myPlanets[i];
-				var target = this.getNearestEnnemyPlanet(myPlanet,otherPlanets);
-				if(myPlanet.population >= 50) result.push(new com.tamina.planetwars.data.Order(myPlanet.id,target.id,40));
+				var numAttack = 0;
+				while(this.isPlanetCanAttack(myPlanet) && numAttack < 4) {
+					numAttack++;
+					var target = this.getNearestAttackablePlanet(myPlanet,otherPlanets);
+					if(target != null) this._orders.push(new com.tamina.planetwars.data.Order(myPlanet.id,target.id,this.isAttackable(myPlanet,target))); else break;
+				}
+				if(myPlanet.population - this.getEngagedForceByPlanet(myPlanet,this._orders) == com.tamina.planetwars.data.PlanetPopulation.getMaxPopulation(myPlanet.size)) this._orders.push(new com.tamina.planetwars.data.Order(myPlanet.id,this.getNearestGrowingPlanet(myPlanet,myPlanets).id,20));
 			}
 		}
-		return result;
+		this._currentTurn++;
+		return this._orders;
 	}
 });
 var Std = function() { }
@@ -79,6 +206,23 @@ Std.__name__ = true;
 Std.string = function(s) {
 	return js.Boot.__string_rec(s,"");
 }
+com.tamina.planetwars.data.BattleResult = function(playerOneScore,playerTwoScore,numTurn,winner,message,p1,p2,errorCode) {
+	if(errorCode == null) errorCode = 0;
+	if(numTurn == null) numTurn = 0;
+	if(playerTwoScore == null) playerTwoScore = 0;
+	if(playerOneScore == null) playerOneScore = 0;
+	this.playerOneScore = playerOneScore;
+	this.playerTwoScore = playerTwoScore;
+	this.numTurn = numTurn;
+	this.winner = winner;
+	this.message = message;
+	this.p1 = p1;
+	this.p2 = p2;
+	this.errorCode = errorCode;
+};
+com.tamina.planetwars.data.BattleResult.__name__ = true;
+com.tamina.planetwars.data.ErrorCode = function() { }
+com.tamina.planetwars.data.ErrorCode.__name__ = true;
 com.tamina.planetwars.data.Galaxy = function(width,height) {
 	this.width = width;
 	this.height = height;
@@ -109,6 +253,16 @@ com.tamina.planetwars.data.Game.get_NUM_PLANET = function() {
 com.tamina.planetwars.data.Game.get_NEUTRAL_PLAYER = function() {
 	if(com.tamina.planetwars.data.Game._NEUTRAL_PLAYER == null) com.tamina.planetwars.data.Game._NEUTRAL_PLAYER = new com.tamina.planetwars.data.Player("neutre",13421772);
 	return com.tamina.planetwars.data.Game._NEUTRAL_PLAYER;
+}
+com.tamina.planetwars.data.Mock = function() {
+};
+com.tamina.planetwars.data.Mock.__name__ = true;
+com.tamina.planetwars.data.Mock.prototype = {
+	getGalaxy: function(width,height) {
+		var p1 = new com.tamina.planetwars.ia.BasicIA("damo",16711680);
+		var p2 = new com.tamina.planetwars.ia.BasicIA("moebius",65280);
+		return com.tamina.planetwars.utils.GameUtil.createRandomGalaxy(width,height,20,p1,p2);
+	}
 }
 com.tamina.planetwars.data.Order = function(sourceID,targetID,numUnits) {
 	this.sourceID = sourceID;
@@ -281,6 +435,80 @@ com.tamina.planetwars.geom.Point = function(x,y) {
 	this.y = y;
 };
 com.tamina.planetwars.geom.Point.__name__ = true;
+com.tamina.planetwars.ia = {}
+com.tamina.planetwars.ia.BasicIA = function(name,color) {
+	if(color == null) color = 0;
+	if(name == null) name = "";
+	com.tamina.planetwars.data.Player.call(this,name,color);
+};
+com.tamina.planetwars.ia.BasicIA.__name__ = true;
+com.tamina.planetwars.ia.BasicIA.__super__ = com.tamina.planetwars.data.Player;
+com.tamina.planetwars.ia.BasicIA.prototype = $extend(com.tamina.planetwars.data.Player.prototype,{
+	isAttackable: function(source,target) {
+		var result = false;
+		var numTurn = Math.ceil(com.tamina.planetwars.utils.GameUtil.getDistanceBetween(new com.tamina.planetwars.geom.Point(source.x,source.y),new com.tamina.planetwars.geom.Point(target.x,target.y)) / 60);
+		var targetPopulation = target.population + numTurn * 5;
+		if(targetPopulation > com.tamina.planetwars.data.PlanetPopulation.getMaxPopulation(target.size)) targetPopulation = com.tamina.planetwars.data.PlanetPopulation.getMaxPopulation(target.size);
+		if(source.population > targetPopulation) result = true;
+		return result;
+	}
+	,getNearestAttackablePlanet: function(source,candidats) {
+		var result = null;
+		var currentDist = 10000;
+		var _g1 = 0, _g = candidats.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var element = candidats[i];
+			if(currentDist > com.tamina.planetwars.utils.GameUtil.getDistanceBetween(new com.tamina.planetwars.geom.Point(source.x,source.y),new com.tamina.planetwars.geom.Point(element.x,element.y))) {
+				currentDist = com.tamina.planetwars.utils.GameUtil.getDistanceBetween(new com.tamina.planetwars.geom.Point(source.x,source.y),new com.tamina.planetwars.geom.Point(element.x,element.y));
+				if(this.isAttackable(source,element)) result = element;
+			}
+		}
+		return result;
+	}
+	,getNearestPlanet: function(source,candidats) {
+		var result = candidats[0];
+		var currentDist = com.tamina.planetwars.utils.GameUtil.getDistanceBetween(new com.tamina.planetwars.geom.Point(source.x,source.y),new com.tamina.planetwars.geom.Point(result.x,result.y));
+		var _g1 = 0, _g = candidats.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var element = candidats[i];
+			if(currentDist > com.tamina.planetwars.utils.GameUtil.getDistanceBetween(new com.tamina.planetwars.geom.Point(source.x,source.y),new com.tamina.planetwars.geom.Point(element.x,element.y))) {
+				currentDist = com.tamina.planetwars.utils.GameUtil.getDistanceBetween(new com.tamina.planetwars.geom.Point(source.x,source.y),new com.tamina.planetwars.geom.Point(element.x,element.y));
+				result = element;
+			}
+		}
+		return result;
+	}
+	,getOrders: function(context) {
+		var result = new Array();
+		var myPlanets = com.tamina.planetwars.utils.GameUtil.getPlayerPlanets(this.id,context);
+		var otherPlanets = com.tamina.planetwars.utils.GameUtil.getEnnemyPlanets(this.id,context);
+		if(otherPlanets != null && otherPlanets.length > 0) {
+			var _g1 = 0, _g = myPlanets.length;
+			while(_g1 < _g) {
+				var i = _g1++;
+				var myPlanet = myPlanets[i];
+				var target = this.getNearestAttackablePlanet(myPlanet,otherPlanets);
+				if(target != null) result.push(new com.tamina.planetwars.data.Order(myPlanet.id,target.id,myPlanet.population)); else if(myPlanet.population == com.tamina.planetwars.data.PlanetPopulation.getMaxPopulation(myPlanet.size)) result.push(new com.tamina.planetwars.data.Order(myPlanet.id,this.getNearestPlanet(myPlanet,otherPlanets).id,myPlanet.population));
+			}
+		}
+		return result;
+	}
+});
+com.tamina.planetwars.ia.NoneIA = function(name,color) {
+	if(color == null) color = 0;
+	if(name == null) name = "";
+	com.tamina.planetwars.data.Player.call(this,name,color);
+};
+com.tamina.planetwars.ia.NoneIA.__name__ = true;
+com.tamina.planetwars.ia.NoneIA.__super__ = com.tamina.planetwars.data.Player;
+com.tamina.planetwars.ia.NoneIA.prototype = $extend(com.tamina.planetwars.data.Player.prototype,{
+	getOrders: function(context) {
+		var result = new Array();
+		return result;
+	}
+});
 com.tamina.planetwars.utils = {}
 com.tamina.planetwars.utils.GameUtil = function() { }
 com.tamina.planetwars.utils.GameUtil.__name__ = true;
@@ -437,6 +665,7 @@ js.Boot.__string_rec = function(o,s) {
 		return String(o);
 	}
 }
+onmessage = WorkerIA.prototype.messageHandler;
 Math.__name__ = ["Math"];
 Math.NaN = Number.NaN;
 Math.NEGATIVE_INFINITY = Number.NEGATIVE_INFINITY;
@@ -447,9 +676,12 @@ Math.isFinite = function(i) {
 Math.isNaN = function(i) {
 	return isNaN(i);
 };
-onmessage = WorkerIA.prototype.messageHandler;
 String.__name__ = true;
 Array.__name__ = true;
+com.tamina.planetwars.data.ErrorCode.NONE = 0;
+com.tamina.planetwars.data.ErrorCode.EXCEPTION = 1;
+com.tamina.planetwars.data.ErrorCode.HACKER = 2;
+com.tamina.planetwars.data.ErrorCode.INVALID_ORDER = 3;
 com.tamina.planetwars.data.Game.DEFAULT_PLAYER_POPULATION = 100;
 com.tamina.planetwars.data.Game.PLANET_GROWTH = 5;
 com.tamina.planetwars.data.Game.SHIP_SPEED = 60;
@@ -477,5 +709,5 @@ com.tamina.planetwars.data.PlanetSize.SMALL_EXTENSION = "_small";
 com.tamina.planetwars.data.PlanetSize.NORMAL_EXTENSION = "_normal";
 com.tamina.planetwars.data.PlanetSize.BIG_EXTENSION = "_big";
 com.tamina.planetwars.data.PlanetSize.HUGE_EXTENSION = "_huge";
-MyIA.main();
+KurganIA.main();
 })();
