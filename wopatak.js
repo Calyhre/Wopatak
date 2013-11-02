@@ -21,37 +21,6 @@
     }
   };
 
-  getOrders = function(context) {
-    var myPlanet, myPlanets, otherPlanets, result, _i, _len;
-    result = [];
-    myPlanets = GameUtil.getPlayerPlanets(id, context);
-    otherPlanets = GameUtil.getEnnemyPlanets(id, context);
-    if (otherPlanets !== null && otherPlanets.length > 0) {
-      for (_i = 0, _len = myPlanets.length; _i < _len; _i++) {
-        myPlanet = myPlanets[_i];
-        if (myPlanet.population >= 40) {
-          result.push(new Order(myPlanet.id, getNearestPlanet(myPlanet, otherPlanets).id, myPlanet.population));
-        }
-      }
-    }
-    return result;
-  };
-
-  getNearestPlanet = function(source, candidats) {
-    var currentDist, dist, element, result, _i, _len;
-    result = candidats[0];
-    currentDist = GameUtil.getDistanceBetween(new Point(source.x, source.y), new Point(result.x, result.y));
-    for (_i = 0, _len = candidats.length; _i < _len; _i++) {
-      element = candidats[_i];
-      dist = GameUtil.getDistanceBetween(new Point(source.x, source.y), new Point(element.x, element.y));
-      if (currentDist > dist) {
-        currentDist = dist;
-        result = element;
-      }
-    }
-    return result;
-  };
-
   Galaxy = (function() {
     function Galaxy(width, height) {
       this.width = width;
@@ -303,5 +272,36 @@
     return PlanetSize;
 
   })();
+
+  getOrders = function(context) {
+    var myPlanet, myPlanets, otherPlanets, result, _i, _len;
+    result = [];
+    myPlanets = GameUtil.getPlayerPlanets(id, context);
+    otherPlanets = GameUtil.getEnnemyPlanets(id, context);
+    if (otherPlanets !== null && otherPlanets.length > 0) {
+      for (_i = 0, _len = myPlanets.length; _i < _len; _i++) {
+        myPlanet = myPlanets[_i];
+        if (myPlanet.population >= 40) {
+          result.push(new Order(myPlanet.id, getNearestPlanet(myPlanet, otherPlanets).id, myPlanet.population));
+        }
+      }
+    }
+    return result;
+  };
+
+  getNearestPlanet = function(source, candidats) {
+    var currentDist, dist, element, result, _i, _len;
+    result = candidats[0];
+    currentDist = GameUtil.getDistanceBetween(new Point(source.x, source.y), new Point(result.x, result.y));
+    for (_i = 0, _len = candidats.length; _i < _len; _i++) {
+      element = candidats[_i];
+      dist = GameUtil.getDistanceBetween(new Point(source.x, source.y), new Point(element.x, element.y));
+      if (currentDist > dist) {
+        currentDist = dist;
+        result = element;
+      }
+    }
+    return result;
+  };
 
 }).call(this);

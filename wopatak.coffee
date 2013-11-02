@@ -15,33 +15,6 @@ id = 0
     postMessage( new TurnResult( getOrders(turnMessage.galaxy), debugMessage) )
   else postMessage("data null")
 
-
-# Invoquée tous les tours pour recuperer la liste des ordres à exécuter.
-# C'est la methode à modifier pour cabler son IA.
-# @param context:Galaxy
-# @return result:Array<Order>
-getOrders = (context) ->
-  result = []
-  myPlanets = GameUtil.getPlayerPlanets( id, context )
-  otherPlanets = GameUtil.getEnnemyPlanets(id, context)
-  if otherPlanets != null && otherPlanets.length > 0
-    for myPlanet in myPlanets
-      if myPlanet.population >=40
-        result.push new Order( myPlanet.id, getNearestPlanet(myPlanet,otherPlanets).id, myPlanet.population )
-
-  return result;
-
-
-getNearestPlanet = ( source, candidats ) ->
-  result = candidats[ 0 ]
-  currentDist = GameUtil.getDistanceBetween( new Point( source.x, source.y ), new Point( result.x, result.y ) )
-  for element in candidats
-    dist = GameUtil.getDistanceBetween( new Point( source.x, source.y ), new Point( element.x, element.y ) )
-    if  currentDist > dist
-      currentDist = dist
-      result = element
-  return result
-
 # @model Galaxy
 # @param width:Number largeur de la galaxy
 # @param height:Number hauteur de la galaxy
@@ -182,3 +155,29 @@ class PlanetSize
   @NORMAL : 2
   @BIG : 3
   @HUGE : 4
+
+# Invoquée tous les tours pour recuperer la liste des ordres à exécuter.
+# C'est la methode à modifier pour cabler son IA.
+# @param context:Galaxy
+# @return result:Array<Order>
+getOrders = (context) ->
+  result = []
+  myPlanets = GameUtil.getPlayerPlanets( id, context )
+  otherPlanets = GameUtil.getEnnemyPlanets(id, context)
+  if otherPlanets != null && otherPlanets.length > 0
+    for myPlanet in myPlanets
+      if myPlanet.population >=40
+        result.push new Order( myPlanet.id, getNearestPlanet(myPlanet,otherPlanets).id, myPlanet.population )
+
+  return result;
+
+
+getNearestPlanet = ( source, candidats ) ->
+  result = candidats[ 0 ]
+  currentDist = GameUtil.getDistanceBetween( new Point( source.x, source.y ), new Point( result.x, result.y ) )
+  for element in candidats
+    dist = GameUtil.getDistanceBetween( new Point( source.x, source.y ), new Point( element.x, element.y ) )
+    if  currentDist > dist
+      currentDist = dist
+      result = element
+  return result
